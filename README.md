@@ -4,20 +4,34 @@ Automation for building and testing the m68k emulation work: QEMU
 machine models, the u-boot ports for those boards, and Linux/m68k on
 top.
 
-This is a work in progress. It currently provides the CI plumbing to
-install what is needed to build QEMU from source.
+This is a work in progress.
+
+## Sources
+
+External trees are tracked in `sources.repos`, a [vcs2l] manifest, and
+checked out under `src/` by `scripts/fetch-sources.sh` (which also
+prints the exact commits it resolved).
+
+[vcs2l]: https://github.com/ros-infrastructure/vcs2l
+
+## Buildroot
+
+Generic, board-agnostic Buildroot builds for each m68k CPU variant,
+optimised for the target CPU (gcc `-mcpu=68030` / `-mcpu=68040`):
+
+```sh
+sudo scripts/install-buildroot-deps.sh   # host packages + vcs2l
+scripts/fetch-sources.sh                 # checkout upstream Buildroot
+scripts/build-buildroot.sh 68030         # -> output/68030/images/
+scripts/build-buildroot.sh 68040         # -> output/68040/images/
+```
+
+- `configs/buildroot/m68k_<cpu>_defconfig` — the per-CPU defconfigs.
+- `.github/workflows/buildroot.yml` — builds both CPUs on `ubuntu-latest`.
 
 ## Layout
 
-- `scripts/install-qemu-build-deps.sh` — install QEMU's build
-  dependencies on a Debian/Ubuntu system. Run it locally with
-  `sudo scripts/install-qemu-build-deps.sh`.
-- `.github/workflows/qemu-build-deps.yml` — GitHub Actions job that runs
-  the script on `ubuntu-latest` and prints the resulting tool versions.
-
-## Planned
-
-- Build `qemu-system-m68k` and cache it.
-- Build the u-boot images for each supported board.
-- Boot each machine end to end and assert it reaches its firmware /
-  bootloader prompt (regression tests).
+- `sources.repos` — vcs2l manifest of external source trees.
+- `scripts/` — dependency install, source fetch, and build scripts.
+- `configs/` — Buildroot defconfigs.
+- `.github/workflows/` — CI jobs.
