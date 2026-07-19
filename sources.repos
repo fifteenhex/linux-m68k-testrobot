@@ -1,0 +1,8 @@
+# vcs2l manifest of the external source trees the robot builds.
+# Fetch with: scripts/fetch-sources.sh  (runs `vcs import src`).
+# The keys are the checkout paths under src/.
+repositories:
+  buildroot:
+    type: git
+    url: https://gitlab.com/buildroot.org/buildroot.git
+    version: '2026.02.3'
