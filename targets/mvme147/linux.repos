@@ -1,0 +1,12 @@
+# Linux fork for the mvme147 target: the m68k-testrobot branch, which
+# carries the MVME147 support that mainline Linux only partially has.
+# Checked out as src/linux-m68k-testrobot.  Kept in its own manifest so a
+# fetch only clones this tree.
+#
+# Mainline-supported targets (e.g. q800) build the shared mainline Linux
+# from sources.repos instead.
+repositories:
+  linux-m68k-testrobot:
+    type: git
+    url: https://github.com/fifteenhex/linux.git
+    version: m68k-testrobot

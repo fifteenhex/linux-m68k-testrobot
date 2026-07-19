@@ -32,5 +32,20 @@ scripts/boot-target.sh mvme147                          # ROMboot the SPL and ch
 
 (Commands are run from the repository root.)
 
+## Linux
+
+Mainline Linux only partially supports the MVME147, so its kernel is
+built from the [fifteenhex/linux] fork (branch `m68k-testrobot`, in
+`linux.repos`) using the in-tree `mvme147_defconfig`:
+
+```sh
+sudo scripts/install-linux-deps.sh
+scripts/fetch-sources.sh targets/mvme147/linux.repos    # the Linux fork
+scripts/build-linux.sh mvme147                          # -> output/linux/mvme147/vmlinux
+```
+
+Booting the kernel (via U-Boot) is not wired up yet.
+
 [fifteenhex/qemu]: https://github.com/fifteenhex/qemu
 [fifteenhex/u-boot]: https://github.com/fifteenhex/u-boot
+[fifteenhex/linux]: https://github.com/fifteenhex/linux
