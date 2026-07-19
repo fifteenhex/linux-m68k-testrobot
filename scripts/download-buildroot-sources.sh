@@ -1,11 +1,10 @@
 #!/bin/sh
-# Build Buildroot for one m68k CPU variant using our defconfig.
+# Download (but don't build) all Buildroot source tarballs for a CPU
+# variant into the shared download directory, so a later build finds
+# them already present.  Point BR2_DL_DIR at a directory shared across
+# variants and cached between CI runs.
 #
-# Usage: scripts/build-buildroot.sh <variant>   (e.g. 68030, 68040)
-#
-# Sources must already be fetched (scripts/fetch-sources.sh).  Each
-# variant builds out-of-tree under output/<variant>/ so they don't
-# clash.
+# Usage: BR2_DL_DIR=/some/dl scripts/download-buildroot-sources.sh <variant>
 set -eu
 
 if [ $# -ne 1 ]; then
@@ -28,18 +27,14 @@ if [ ! -f "$defconfig" ]; then
 	exit 1
 fi
 
-mkdir -p "$output"
-
-# Honour a shared download directory if the caller exports BR2_DL_DIR,
-# so variants (and CI runs) reuse the same source tarballs instead of
-# each downloading their own copy.
 dl=""
 if [ -n "${BR2_DL_DIR:-}" ]; then
 	mkdir -p "$BR2_DL_DIR"
 	dl="BR2_DL_DIR=$BR2_DL_DIR"
 fi
 
+mkdir -p "$output"
 make -C "$buildroot" O="$output" BR2_DEFCONFIG="$defconfig" $dl defconfig
-make -C "$buildroot" O="$output" $dl
+make -C "$buildroot" O="$output" $dl source
 
-echo "Built Buildroot for m68k $variant; images in $output/images/"
+echo "Downloaded Buildroot sources for m68k $variant into ${BR2_DL_DIR:-$buildroot/dl}"

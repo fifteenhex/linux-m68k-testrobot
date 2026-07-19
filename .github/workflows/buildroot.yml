@@ -2,14 +2,48 @@ name: buildroot
 
 # Build a generic Buildroot rootfs + toolchain for each supported m68k
 # CPU variant, from upstream Buildroot source (see sources.repos).
+#
+# A single "download" job fetches every source tarball once into a
+# shared BR2_DL_DIR and caches it; the per-CPU build jobs then reuse
+# those downloads instead of each fetching their own copy, and the
+# cache carries the tarballs over between pipeline runs.
 
 on:
   push:
   pull_request:
   workflow_dispatch:
 
+env:
+  BR2_DL_DIR: ${{ github.workspace }}/br-dl
+
 jobs:
+  download:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      - name: Install build dependencies
+        run: sudo scripts/install-buildroot-deps.sh
+
+      - name: Fetch sources
+        run: scripts/fetch-sources.sh
+
+      - name: Cache Buildroot downloads
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.BR2_DL_DIR }}
+          key: br-dl-${{ hashFiles('sources.repos', 'configs/buildroot/*') }}
+          restore-keys: br-dl-
+
+      - name: Download all Buildroot sources
+        run: |
+          for cpu in 68030 68040; do
+            scripts/download-buildroot-sources.sh "$cpu"
+          done
+
   build:
+    needs: download
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -24,6 +58,13 @@ jobs:
 
       - name: Fetch sources
         run: scripts/fetch-sources.sh
+
+      - name: Restore Buildroot downloads
+        uses: actions/cache/restore@v4
+        with:
+          path: ${{ env.BR2_DL_DIR }}
+          key: br-dl-${{ hashFiles('sources.repos', 'configs/buildroot/*') }}
+          restore-keys: br-dl-
 
       - name: Build Buildroot (m68k ${{ matrix.cpu }})
         run: scripts/build-buildroot.sh ${{ matrix.cpu }}
