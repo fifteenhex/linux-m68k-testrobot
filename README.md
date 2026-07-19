@@ -38,7 +38,7 @@ A target is one machine + how it is booted.  Each lives under
 | --- | --- | --- | --- |
 | Quadra 800 (`q800`) | Yes | kernel-direct | [![q800](https://github.com/fifteenhex/linux-m68k-testrobot/actions/workflows/q800.yml/badge.svg)](https://github.com/fifteenhex/linux-m68k-testrobot/actions/workflows/q800.yml) |
 | m68k virt (`virt`) | Yes | kernel-direct | [![virt](https://github.com/fifteenhex/linux-m68k-testrobot/actions/workflows/virt.yml/badge.svg)](https://github.com/fifteenhex/linux-m68k-testrobot/actions/workflows/virt.yml) |
-| MVME147 (`mvme147`) | Yes (fork) | rom (147Bug) | [![mvme147](https://github.com/fifteenhex/linux-m68k-testrobot/actions/workflows/mvme147.yml/badge.svg)](https://github.com/fifteenhex/linux-m68k-testrobot/actions/workflows/mvme147.yml) |
+| MVME147 (`mvme147`) | Yes (fork) | ROMboot → U-Boot SPL | [![mvme147](https://github.com/fifteenhex/linux-m68k-testrobot/actions/workflows/mvme147.yml/badge.svg)](https://github.com/fifteenhex/linux-m68k-testrobot/actions/workflows/mvme147.yml) |
 
 The first target is the **Quadra 800** (`q800`), a 68040 machine booted
 with QEMU's direct kernel load (`-kernel`) plus the 68040 Buildroot
@@ -62,23 +62,33 @@ the flow is identical (`scripts/build-linux.sh virt`,
 `scripts/boot-target.sh virt`).
 
 The third target is the **MVME147** (`mvme147`), a 68030 VME board that
-mainline QEMU doesn't support.  It uses a QEMU fork
-([fifteenhex/qemu], branch `m68k-testrobot`), declared in its own
-per-target manifest `targets/mvme147/sources.repos` and built as
-`output/qemu-m68k-testrobot/` (selected by `QEMU_SOURCE` in
-`target.conf`).  For now it just boots the board's 147Bug firmware ROM
-(downloaded by `scripts/fetch-rom.sh` from `ROM_URL`, loaded with
-`-bios`) to its monitor prompt:
+mainline QEMU doesn't support.  It uses a QEMU fork ([fifteenhex/qemu],
+branch `m68k-testrobot`, in `targets/mvme147/sources.repos`, built as
+`output/qemu-m68k-testrobot/` and selected by `QEMU_SOURCE`) plus a
+matching U-Boot fork ([fifteenhex/u-boot], branch `m68k-testrobot`, in
+`targets/mvme147/u-boot.repos`).
+
+The board has no direct kernel/loader path in QEMU, so U-Boot is started
+through **147Bug's ROMboot**: `scripts/build-mvme147-boot.sh` wraps the
+U-Boot SPL as a checksummed "BOOT" module in ROM bank 2 (plus a
+ROMboot-enabled NVRAM and a blank SCSI disk), 147Bug finds and runs it,
+and the SPL then tries to load full U-Boot over SCSI.  For now we only
+check it gets that far (`Trying to boot from SATA`):
 
 ```sh
 sudo scripts/install-qemu-build-deps.sh
+sudo scripts/install-uboot-deps.sh
 scripts/fetch-sources.sh targets/mvme147/sources.repos  # the QEMU fork
+scripts/fetch-sources.sh targets/mvme147/u-boot.repos   # the U-Boot fork
 scripts/build-qemu.sh qemu-m68k-testrobot               # -> output/qemu-m68k-testrobot/
+scripts/build-uboot.sh u-boot-m68k-testrobot mvme147_defconfig
 scripts/fetch-rom.sh mvme147                            # -> output/roms/147bug...
-scripts/boot-target.sh mvme147                          # boot 147Bug and check
+scripts/build-mvme147-boot.sh                           # ROMboot module + NVRAM + disk
+scripts/boot-target.sh mvme147                          # ROMboot the SPL and check
 ```
 
 [fifteenhex/qemu]: https://github.com/fifteenhex/qemu
+[fifteenhex/u-boot]: https://github.com/fifteenhex/u-boot
 
 The kernel-direct targets depend on the Buildroot rootfs for their CPU
 (`BUILDROOT_CPU` in `target.conf`); `boot-target.sh` fails if it is
