@@ -1,6 +1,7 @@
-# Extra source tree for the mvme147 target (fetched in addition to the
-# shared sources.repos): the QEMU fork that models the MVME147, which is
-# not supported by mainline QEMU.  Built as output/qemu-m68k-testrobot/.
+# QEMU fork for the mvme147 target (fetched in addition to the shared
+# sources.repos): the fork that models the MVME147, which mainline QEMU
+# doesn't support.  Built as output/qemu-m68k-testrobot/.  The matching
+# U-Boot fork is in targets/mvme147/u-boot.repos.
 repositories:
   qemu-m68k-testrobot:
     type: git
