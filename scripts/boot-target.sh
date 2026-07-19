@@ -44,6 +44,28 @@ kernel-direct) ;;
 	;;
 esac
 
+# The target boots the Buildroot rootfs built for its CPU.  Require that
+# image to be present and attach it according to ROOTFS_METHOD.
+rootfs_args=""
+if [ -n "${BUILDROOT_CPU:-}" ]; then
+	images=$root/output/$BUILDROOT_CPU/images
+	case "${ROOTFS_METHOD:-initramfs}" in
+	initramfs)
+		image=$images/rootfs.cpio.lz4
+		rootfs_args="-initrd $image"
+		;;
+	*)
+		echo "error: unknown ROOTFS_METHOD '${ROOTFS_METHOD}'" >&2
+		exit 1
+		;;
+	esac
+	if [ ! -f "$image" ]; then
+		echo "error: Buildroot image $image missing;" >&2
+		echo "       build it first: scripts/build-buildroot.sh $BUILDROOT_CPU" >&2
+		exit 1
+	fi
+fi
+
 log=$root/output/$target-boot.log
 mkdir -p "$root/output"
 : > "$log"
@@ -52,7 +74,7 @@ echo "Booting $target (machine=$QEMU_MACHINE, method=kernel-direct)..."
 # Route the console to a file (no display, no interactive monitor) so we
 # can watch for the expected string.
 "$qemu" -M "$QEMU_MACHINE" -kernel "$vmlinux" -append "$KERNEL_APPEND" \
-	-display none -serial "file:$log" ${QEMU_EXTRA:-} &
+	${rootfs_args} -display none -serial "file:$log" ${QEMU_EXTRA:-} &
 qpid=$!
 
 # Stop as soon as we see the expected string, or after the timeout.
