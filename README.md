@@ -39,7 +39,7 @@ README with its build/boot recipe — linked from the table below).
 | --- | --- | --- | --- |
 | [Quadra 800](targets/q800/README.md) (`q800`) | Yes | kernel-direct | [![q800](https://github.com/fifteenhex/linux-m68k-testrobot/actions/workflows/q800.yml/badge.svg)](https://github.com/fifteenhex/linux-m68k-testrobot/actions/workflows/q800.yml) |
 | [m68k virt](targets/virt/README.md) (`virt`) | Yes | kernel-direct | [![virt](https://github.com/fifteenhex/linux-m68k-testrobot/actions/workflows/virt.yml/badge.svg)](https://github.com/fifteenhex/linux-m68k-testrobot/actions/workflows/virt.yml) |
-| [MVME147](targets/mvme147/README.md) (`mvme147`) | Yes (fork) | ROMboot → U-Boot SPL | [![mvme147](https://github.com/fifteenhex/linux-m68k-testrobot/actions/workflows/mvme147.yml/badge.svg)](https://github.com/fifteenhex/linux-m68k-testrobot/actions/workflows/mvme147.yml) |
+| [MVME147](targets/mvme147/README.md) (`mvme147`) | Yes (fork) | ROMboot → U-Boot → Linux | [![mvme147](https://github.com/fifteenhex/linux-m68k-testrobot/actions/workflows/mvme147.yml/badge.svg)](https://github.com/fifteenhex/linux-m68k-testrobot/actions/workflows/mvme147.yml) |
 
 The kernel-direct targets depend on the Buildroot rootfs for their CPU
 (`BUILDROOT_CPU` in `target.conf`); `boot-target.sh` fails if it is
