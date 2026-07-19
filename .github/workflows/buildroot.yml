@@ -53,13 +53,25 @@ jobs:
       - name: Check out the repository
         uses: actions/checkout@v4
 
+      # Cache the built rootfs image, keyed on the Buildroot version and
+      # this CPU's defconfig.  On a hit the whole build below is skipped.
+      - name: Cache Buildroot rootfs image
+        id: rootfs
+        uses: actions/cache@v4
+        with:
+          path: output/${{ matrix.cpu }}/images
+          key: br-rootfs-${{ matrix.cpu }}-${{ hashFiles('sources.repos', format('configs/buildroot/m68k_{0}_defconfig', matrix.cpu)) }}
+
       - name: Install build dependencies
+        if: steps.rootfs.outputs.cache-hit != 'true'
         run: sudo scripts/install-buildroot-deps.sh
 
       - name: Fetch sources
+        if: steps.rootfs.outputs.cache-hit != 'true'
         run: scripts/fetch-sources.sh
 
       - name: Restore Buildroot downloads
+        if: steps.rootfs.outputs.cache-hit != 'true'
         uses: actions/cache/restore@v4
         with:
           path: ${{ env.BR2_DL_DIR }}
@@ -67,6 +79,7 @@ jobs:
           restore-keys: br-dl-
 
       - name: Build Buildroot (m68k ${{ matrix.cpu }})
+        if: steps.rootfs.outputs.cache-hit != 'true'
         run: scripts/build-buildroot.sh ${{ matrix.cpu }}
 
       - name: Upload images
