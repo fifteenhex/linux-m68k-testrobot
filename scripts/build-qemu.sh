@@ -5,12 +5,16 @@
 # build dependencies installed (scripts/install-qemu-build-deps.sh).
 # Builds out-of-tree under output/qemu/.
 #
-# Usage: scripts/build-qemu.sh
+# Usage: scripts/build-qemu.sh [source]
+#   source is the checkout under src/ to build (default "qemu", the
+#   mainline tree).  Pass e.g. "qemu-m68k-testrobot" to build a fork.
+#   The binary is written to output/<source>/qemu-system-m68k.
 set -eu
 
 root=$(cd "$(dirname "$0")/.." && pwd)
-src=$root/src/qemu
-out=$root/output/qemu
+name=${1:-qemu}
+src=$root/src/$name
+out=$root/output/$name
 
 if [ ! -d "$src" ]; then
 	echo "error: $src missing; run scripts/fetch-sources.sh first" >&2

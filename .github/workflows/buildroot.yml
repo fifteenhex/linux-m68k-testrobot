@@ -8,9 +8,11 @@ name: buildroot
 # those downloads instead of each fetching their own copy, and the
 # cache carries the tarballs over between pipeline runs.
 #
-# This workflow also builds qemu-system-m68k once (the "qemu" job) and
-# caches it, so the per-target boot workflows that chain off this one
-# restore that binary instead of each rebuilding QEMU.
+# This workflow also builds qemu-system-m68k once and caches it - both
+# the mainline build (the "qemu" job) and the m68k-testrobot fork used
+# by the mvme147 target (the "qemu-fork" job) - so the per-target boot
+# workflows that chain off this one just restore whichever binary they
+# need instead of rebuilding QEMU.
 
 on:
   push:
@@ -126,4 +128,42 @@ jobs:
         with:
           name: qemu-system-m68k
           path: output/qemu/qemu-system-m68k
+          if-no-files-found: error
+
+  # Build the m68k-testrobot QEMU fork (for the mvme147 target, which
+  # mainline QEMU doesn't support) the same way, keyed on the fork
+  # manifest and the configure flags.  The mvme147 boot workflow restores
+  # this rather than rebuilding it.  Note: a branch pin does not refresh
+  # when the branch moves upstream; bump targets/mvme147/sources.repos to
+  # force a rebuild.
+  qemu-fork:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      - name: Cache qemu-system-m68k (fork)
+        id: qemu
+        uses: actions/cache@v4
+        with:
+          path: output/qemu-m68k-testrobot/qemu-system-m68k
+          key: qemu-m68k-testrobot-${{ hashFiles('targets/mvme147/sources.repos', 'scripts/build-qemu.sh') }}
+
+      - name: Install build dependencies
+        if: steps.qemu.outputs.cache-hit != 'true'
+        run: sudo scripts/install-qemu-build-deps.sh
+
+      - name: Fetch the QEMU fork
+        if: steps.qemu.outputs.cache-hit != 'true'
+        run: scripts/fetch-sources.sh targets/mvme147/sources.repos
+
+      - name: Build qemu-system-m68k (fork)
+        if: steps.qemu.outputs.cache-hit != 'true'
+        run: scripts/build-qemu.sh qemu-m68k-testrobot
+
+      - name: Upload qemu-system-m68k (fork)
+        uses: actions/upload-artifact@v4
+        with:
+          name: qemu-system-m68k-fork
+          path: output/qemu-m68k-testrobot/qemu-system-m68k
           if-no-files-found: error

@@ -1,0 +1,61 @@
+name: mvme147
+
+# Boot the Motorola MVME147 to its 147Bug firmware prompt.  MVME147 is
+# not in mainline QEMU, so it runs on the m68k-testrobot QEMU fork, which
+# the buildroot workflow builds and caches (like the mainline QEMU).
+#
+# Like the other targets this runs *after* the buildroot workflow and
+# restores the fork binary from its cache; it just adds the 147Bug ROM.
+# It doesn't use Buildroot or the mainline QEMU.
+
+on:
+  workflow_run:
+    workflows: [buildroot]
+    types: [completed]
+  workflow_dispatch:
+
+jobs:
+  boot:
+    runs-on: ubuntu-latest
+    # On a workflow_run trigger, only proceed if the buildroot run passed
+    # (so the fork qemu cache exists); a manual dispatch always runs.
+    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      # Reuse the fork's qemu-system-m68k the buildroot workflow built and
+      # cached (same key) rather than rebuilding QEMU here.
+      - name: Restore qemu-system-m68k (fork)
+        uses: actions/cache/restore@v4
+        with:
+          path: output/qemu-m68k-testrobot/qemu-system-m68k
+          key: qemu-m68k-testrobot-${{ hashFiles('targets/mvme147/sources.repos', 'scripts/build-qemu.sh') }}
+          fail-on-cache-miss: true
+
+      # The restored qemu binary still needs its runtime libraries.
+      - name: Install QEMU runtime dependencies
+        run: sudo scripts/install-qemu-build-deps.sh
+
+      # Cache the downloaded ROM so we don't hit bitsavers every run.
+      - name: Cache 147Bug ROM
+        id: rom
+        uses: actions/cache@v4
+        with:
+          path: output/roms
+          key: rom-mvme147-${{ hashFiles('targets/mvme147/target.conf') }}
+
+      - name: Download the 147Bug ROM
+        if: steps.rom.outputs.cache-hit != 'true'
+        run: scripts/fetch-rom.sh mvme147
+
+      - name: Boot the MVME147 (147Bug)
+        run: scripts/boot-target.sh mvme147
+
+      - name: Upload boot log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mvme147-boot-log
+          path: output/mvme147-boot.log
+          if-no-files-found: warn
