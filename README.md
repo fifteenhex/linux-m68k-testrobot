@@ -32,28 +32,14 @@ scripts/build-buildroot.sh 68040         # -> output/68040/images/
 ## Targets
 
 A target is one machine + how it is booted.  Each lives under
-`targets/<name>/` (kernel config, `target.conf`).
+`targets/<name>/` (kernel config or boot artifacts, `target.conf`, and a
+README with its build/boot recipe — linked from the table below).
 
 | Machine | In QEMU | Boot method | Boot pipeline |
 | --- | --- | --- | --- |
-| Quadra 800 (`q800`) | Yes | kernel-direct | [![q800](https://github.com/fifteenhex/linux-m68k-testrobot/actions/workflows/q800.yml/badge.svg)](https://github.com/fifteenhex/linux-m68k-testrobot/actions/workflows/q800.yml) |
+| [Quadra 800](targets/q800/README.md) (`q800`) | Yes | kernel-direct | [![q800](https://github.com/fifteenhex/linux-m68k-testrobot/actions/workflows/q800.yml/badge.svg)](https://github.com/fifteenhex/linux-m68k-testrobot/actions/workflows/q800.yml) |
 | m68k virt (`virt`) | Yes | kernel-direct | [![virt](https://github.com/fifteenhex/linux-m68k-testrobot/actions/workflows/virt.yml/badge.svg)](https://github.com/fifteenhex/linux-m68k-testrobot/actions/workflows/virt.yml) |
 | MVME147 (`mvme147`) | Yes (fork) | ROMboot → U-Boot SPL | [![mvme147](https://github.com/fifteenhex/linux-m68k-testrobot/actions/workflows/mvme147.yml/badge.svg)](https://github.com/fifteenhex/linux-m68k-testrobot/actions/workflows/mvme147.yml) |
-
-The first target is the **Quadra 800** (`q800`), a 68040 machine booted
-with QEMU's direct kernel load (`-kernel`) plus the 68040 Buildroot
-rootfs as an lz4 initramfs:
-
-```sh
-sudo scripts/install-qemu-build-deps.sh
-sudo scripts/install-linux-deps.sh
-sudo scripts/install-buildroot-deps.sh
-scripts/fetch-sources.sh              # checkout qemu + linux + buildroot
-scripts/build-qemu.sh                 # -> output/qemu/qemu-system-m68k
-scripts/build-linux.sh q800           # -> output/linux/q800/vmlinux
-scripts/build-buildroot.sh 68040      # -> output/68040/images/rootfs.cpio.lz4
-scripts/boot-target.sh q800           # boot and check
-```
 
 The second target is the **m68k virt machine** (`virt`), QEMU's
 pure-virtual m68k platform (goldfish TTY/RTC/PIC + virtio-mmio).  It
