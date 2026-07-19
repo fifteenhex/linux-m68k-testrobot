@@ -42,12 +42,11 @@ jobs:
           key: uboot-mvme147-${{ hashFiles('targets/mvme147/u-boot.repos', 'scripts/build-uboot.sh') }}
           fail-on-cache-miss: true
 
-      # qemu runtime libraries (to run the restored binary) plus the m68k
-      # toolchain + python3 (to assemble the ROMboot artifacts).
+      # qemu runtime libraries (to run the restored binary); python3 (for
+      # the NVRAM image) comes with them.  The SPL is already a ROMboot
+      # module, so no toolchain is needed to assemble the boot artifacts.
       - name: Install dependencies
-        run: |
-          sudo scripts/install-qemu-build-deps.sh
-          sudo scripts/install-uboot-deps.sh
+        run: sudo scripts/install-qemu-build-deps.sh
 
       # Cache the downloaded ROM so we don't hit bitsavers every run.
       - name: Cache 147Bug ROM

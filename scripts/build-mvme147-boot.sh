@@ -1,24 +1,19 @@
 #!/bin/sh
-# Assemble the mvme147 ROMboot boot artifacts from a built U-Boot SPL.
-#
-# The MVME147 has no direct kernel/loader path in QEMU, so u-boot is
-# started through 147Bug's ROMboot: 147Bug scans ROM bank 2 at power-up
-# for a checksummed "BOOT" module and runs it.  This produces, under
-# output/mvme147/:
-#   - rombank2.bin        the SPL wrapped in such a BOOT module (a stub
-#                         copies the SPL to its text base and jumps)
+# Prepare the mvme147 ROMboot boot artifacts under output/mvme147/:
+#   - rombank2.bin        the ROM bank 2 image = the U-Boot SPL, which is
+#                         itself a 147Bug "BOOT" module (the ROMboot header
+#                         and self-relocator are built into the SPL, see
+#                         the U-Boot fork's arch/m68k/cpu/mc68000/start.S)
 #   - nvram-romboot.img   MK48T02 NVRAM with the ROMboot scan enabled
 #   - disk.img            a blank SCSI disk for the SPL to try to boot from
 #
 # Usage: scripts/build-mvme147-boot.sh
 #
 # Requires the U-Boot SPL at output/u-boot-m68k-testrobot/spl/u-boot-spl.bin
-# (scripts/build-uboot.sh) plus the m68k toolchain + python3
-# (scripts/install-uboot-deps.sh).
+# (scripts/build-uboot.sh) and python3.
 set -eu
 
 root=$(cd "$(dirname "$0")/.." && pwd)
-tools=$root/targets/mvme147/romboot
 spl=$root/output/u-boot-m68k-testrobot/spl/u-boot-spl.bin
 out=$root/output/mvme147
 
@@ -30,12 +25,11 @@ fi
 
 mkdir -p "$out"
 
-# Wrap the SPL in a 147Bug ROMboot module for ROM bank 2.
-CROSS_COMPILE="${CROSS_COMPILE:-m68k-linux-gnu-}" \
-	python3 "$tools/build-romboot.py" "$spl" "$out/rombank2.bin"
+# The SPL is already a ROMboot module; use it as the ROM bank 2 image.
+cp "$spl" "$out/rombank2.bin"
 
 # NVRAM with the power-up ROMboot scan enabled.
-python3 "$tools/make-nvram.py" --romboot "$out/nvram-romboot.img"
+python3 "$root/targets/mvme147/make-nvram.py" --romboot "$out/nvram-romboot.img"
 
 # A blank SCSI disk: the SPL only needs a target to try to boot from.
 truncate -s 16M "$out/disk.img" 2>/dev/null || \
