@@ -7,6 +7,10 @@ name: buildroot
 # shared BR2_DL_DIR and caches it; the per-CPU build jobs then reuse
 # those downloads instead of each fetching their own copy, and the
 # cache carries the tarballs over between pipeline runs.
+#
+# This workflow also builds qemu-system-m68k once (the "qemu" job) and
+# caches it, so the per-target boot workflows that chain off this one
+# restore that binary instead of each rebuilding QEMU.
 
 on:
   push:
@@ -87,4 +91,39 @@ jobs:
         with:
           name: rootfs-m68k-${{ matrix.cpu }}
           path: output/${{ matrix.cpu }}/images/
+          if-no-files-found: error
+
+  # Build qemu-system-m68k once and cache it, keyed on the QEMU pin
+  # (sources.repos) and the configure flags (build-qemu.sh).  Target boot
+  # workflows restore this binary rather than rebuilding QEMU.
+  qemu:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      - name: Cache qemu-system-m68k
+        id: qemu
+        uses: actions/cache@v4
+        with:
+          path: output/qemu/qemu-system-m68k
+          key: qemu-m68k-${{ hashFiles('sources.repos', 'scripts/build-qemu.sh') }}
+
+      - name: Install build dependencies
+        if: steps.qemu.outputs.cache-hit != 'true'
+        run: sudo scripts/install-qemu-build-deps.sh
+
+      - name: Fetch sources
+        if: steps.qemu.outputs.cache-hit != 'true'
+        run: scripts/fetch-sources.sh
+
+      - name: Build qemu-system-m68k
+        if: steps.qemu.outputs.cache-hit != 'true'
+        run: scripts/build-qemu.sh
+
+      - name: Upload qemu-system-m68k
+        uses: actions/upload-artifact@v4
+        with:
+          name: qemu-system-m68k
+          path: output/qemu/qemu-system-m68k
           if-no-files-found: error

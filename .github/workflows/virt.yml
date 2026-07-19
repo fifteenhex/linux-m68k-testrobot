@@ -32,6 +32,15 @@ jobs:
           key: br-rootfs-68040-${{ hashFiles('sources.repos', 'configs/buildroot/m68k_68040_defconfig') }}
           fail-on-cache-miss: true
 
+      # Reuse the qemu-system-m68k the buildroot workflow built and
+      # cached (same key) rather than rebuilding QEMU here.
+      - name: Restore qemu-system-m68k
+        uses: actions/cache/restore@v4
+        with:
+          path: output/qemu/qemu-system-m68k
+          key: qemu-m68k-${{ hashFiles('sources.repos', 'scripts/build-qemu.sh') }}
+          fail-on-cache-miss: true
+
       - name: Install dependencies
         run: |
           sudo scripts/install-qemu-build-deps.sh
@@ -39,9 +48,6 @@ jobs:
 
       - name: Fetch sources
         run: scripts/fetch-sources.sh
-
-      - name: Build qemu-system-m68k
-        run: scripts/build-qemu.sh
 
       - name: Build Linux for the virt machine
         run: scripts/build-linux.sh virt
