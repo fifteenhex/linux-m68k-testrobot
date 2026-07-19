@@ -178,12 +178,14 @@ jobs:
       - name: Check out the repository
         uses: actions/checkout@v4
 
-      - name: Cache U-Boot SPL (mvme147)
+      - name: Cache U-Boot (mvme147)
         id: uboot
         uses: actions/cache@v4
         with:
-          path: output/u-boot-m68k-testrobot/spl/u-boot-spl.bin
-          key: uboot-mvme147-${{ hashFiles('targets/mvme147/u-boot.repos', 'scripts/build-uboot.sh') }}
+          path: |
+            output/u-boot-m68k-testrobot/spl/u-boot-spl.bin
+            output/u-boot-m68k-testrobot/u-boot.img
+          key: uboot-mvme147-v2-${{ hashFiles('targets/mvme147/u-boot.repos', 'scripts/build-uboot.sh') }}
 
       - name: Install build dependencies
         if: steps.uboot.outputs.cache-hit != 'true'
@@ -197,9 +199,11 @@ jobs:
         if: steps.uboot.outputs.cache-hit != 'true'
         run: scripts/build-uboot.sh u-boot-m68k-testrobot mvme147_defconfig
 
-      - name: Upload U-Boot SPL
+      - name: Upload U-Boot images
         uses: actions/upload-artifact@v4
         with:
-          name: u-boot-mvme147-spl
-          path: output/u-boot-m68k-testrobot/spl/u-boot-spl.bin
+          name: u-boot-mvme147
+          path: |
+            output/u-boot-m68k-testrobot/spl/u-boot-spl.bin
+            output/u-boot-m68k-testrobot/u-boot.img
           if-no-files-found: error
