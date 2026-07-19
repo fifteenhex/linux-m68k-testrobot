@@ -34,6 +34,11 @@ scripts/build-buildroot.sh 68040         # -> output/68040/images/
 A target is one machine + how it is booted.  Each lives under
 `targets/<name>/` (kernel config, `target.conf`).
 
+| Machine | In QEMU | Boot method | Boot pipeline |
+| --- | --- | --- | --- |
+| Quadra 800 (`q800`) | Yes | kernel-direct | [![q800](https://github.com/fifteenhex/linux-m68k-testrobot/actions/workflows/q800.yml/badge.svg)](https://github.com/fifteenhex/linux-m68k-testrobot/actions/workflows/q800.yml) |
+| m68k virt (`virt`) | Yes | kernel-direct | [![virt](https://github.com/fifteenhex/linux-m68k-testrobot/actions/workflows/virt.yml/badge.svg)](https://github.com/fifteenhex/linux-m68k-testrobot/actions/workflows/virt.yml) |
+
 The first target is the **Quadra 800** (`q800`), a 68040 machine booted
 with QEMU's direct kernel load (`-kernel`) plus the 68040 Buildroot
 rootfs as an lz4 initramfs:
