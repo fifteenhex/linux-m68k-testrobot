@@ -59,7 +59,9 @@ The boot depends on the Buildroot rootfs for the target's CPU
 (`BUILDROOT_CPU` in `target.conf`); `boot-target.sh` fails if it is
 missing.  In CI each target's workflow runs *after* the `buildroot`
 workflow (`workflow_run`) and restores that rootfs from its cache, so
-Buildroot is built once and shared rather than rebuilt per target.
+Buildroot is built once and shared rather than rebuilt per target.  The
+same workflow also builds `qemu-system-m68k` once and caches it, which
+the targets restore too, so QEMU is not rebuilt per target either.
 Booting through the full boot process (ROM / bootloader) instead of
 direct kernel load is a later milestone; `boot-target.sh` and
 `target.conf` are structured so it can be added per target.
