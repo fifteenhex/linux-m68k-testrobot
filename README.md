@@ -38,14 +38,8 @@ README with its build/boot recipe — linked from the table below).
 | Machine | In QEMU | Boot method | Boot pipeline |
 | --- | --- | --- | --- |
 | [Quadra 800](targets/q800/README.md) (`q800`) | Yes | kernel-direct | [![q800](https://github.com/fifteenhex/linux-m68k-testrobot/actions/workflows/q800.yml/badge.svg)](https://github.com/fifteenhex/linux-m68k-testrobot/actions/workflows/q800.yml) |
-| m68k virt (`virt`) | Yes | kernel-direct | [![virt](https://github.com/fifteenhex/linux-m68k-testrobot/actions/workflows/virt.yml/badge.svg)](https://github.com/fifteenhex/linux-m68k-testrobot/actions/workflows/virt.yml) |
+| [m68k virt](targets/virt/README.md) (`virt`) | Yes | kernel-direct | [![virt](https://github.com/fifteenhex/linux-m68k-testrobot/actions/workflows/virt.yml/badge.svg)](https://github.com/fifteenhex/linux-m68k-testrobot/actions/workflows/virt.yml) |
 | MVME147 (`mvme147`) | Yes (fork) | ROMboot → U-Boot SPL | [![mvme147](https://github.com/fifteenhex/linux-m68k-testrobot/actions/workflows/mvme147.yml/badge.svg)](https://github.com/fifteenhex/linux-m68k-testrobot/actions/workflows/mvme147.yml) |
-
-The second target is the **m68k virt machine** (`virt`), QEMU's
-pure-virtual m68k platform (goldfish TTY/RTC/PIC + virtio-mmio).  It
-defaults to a 68040 CPU, so it reuses the same 68040 Buildroot rootfs;
-the flow is identical (`scripts/build-linux.sh virt`,
-`scripts/boot-target.sh virt`).
 
 The third target is the **MVME147** (`mvme147`), a 68030 VME board that
 mainline QEMU doesn't support.  It uses a QEMU fork ([fifteenhex/qemu],
