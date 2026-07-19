@@ -49,11 +49,20 @@ scripts/build-buildroot.sh 68040      # -> output/68040/images/rootfs.cpio.lz4
 scripts/boot-target.sh q800           # boot and check
 ```
 
+The second target is the **m68k virt machine** (`virt`), QEMU's
+pure-virtual m68k platform (goldfish TTY/RTC/PIC + virtio-mmio).  It
+defaults to a 68040 CPU, so it reuses the same 68040 Buildroot rootfs;
+the flow is identical (`scripts/build-linux.sh virt`,
+`scripts/boot-target.sh virt`).
+
 The boot depends on the Buildroot rootfs for the target's CPU
 (`BUILDROOT_CPU` in `target.conf`); `boot-target.sh` fails if it is
-missing.  Booting through the full boot process (ROM / bootloader)
-instead of direct kernel load is a later milestone; `boot-target.sh`
-and `target.conf` are structured so it can be added per target.
+missing.  In CI each target's workflow runs *after* the `buildroot`
+workflow (`workflow_run`) and restores that rootfs from its cache, so
+Buildroot is built once and shared rather than rebuilt per target.
+Booting through the full boot process (ROM / bootloader) instead of
+direct kernel load is a later milestone; `boot-target.sh` and
+`target.conf` are structured so it can be added per target.
 
 ## Layout
 
