@@ -81,6 +81,31 @@ rom)
 	fi
 	set -- "$@" -bios "$rom"
 	;;
+romboot)
+	# Boot the firmware ROM, but also place the ROMboot module (the
+	# wrapped U-Boot SPL) in ROM bank 2, attach the ROMboot-enabled
+	# NVRAM, and give the SPL a SCSI disk to try to boot from.
+	: "${ROM_URL:?target.conf sets BOOT_METHOD=romboot but has no ROM_URL}"
+	rom=$root/output/roms/$(basename "$ROM_URL")
+	artifacts=$root/output/$target
+	rombank2=$artifacts/rombank2.bin
+	nvram=$artifacts/nvram-romboot.img
+	disk=$artifacts/disk.img
+	if [ ! -f "$rom" ]; then
+		echo "error: ROM $rom missing; fetch it first: scripts/fetch-rom.sh $target" >&2
+		exit 1
+	fi
+	for f in "$rombank2" "$nvram" "$disk"; do
+		if [ ! -f "$f" ]; then
+			echo "error: $f missing; build it first: scripts/build-mvme147-boot.sh" >&2
+			exit 1
+		fi
+	done
+	set -- "$@" -bios "$rom" \
+		-device "loader,file=$rombank2,addr=0xffa00000,force-raw=on" \
+		-drive "if=mtd,file=$nvram,format=raw" \
+		-drive "id=hd,file=$disk,format=raw,if=none" -device scsi-hd,drive=hd
+	;;
 *)
 	echo "error: boot method '$method' not supported yet" >&2
 	exit 1

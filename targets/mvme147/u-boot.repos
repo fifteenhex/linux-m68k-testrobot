@@ -1,0 +1,9 @@
+# U-Boot fork for the mvme147 target: the m68k-testrobot branch with
+# MVME147 support.  Built as output/u-boot-m68k-testrobot/.  Kept in its
+# own manifest (separate from the QEMU fork in sources.repos) so the
+# u-boot build job only clones u-boot.
+repositories:
+  u-boot-m68k-testrobot:
+    type: git
+    url: https://github.com/fifteenhex/u-boot.git
+    version: m68k-testrobot

@@ -167,3 +167,39 @@ jobs:
           name: qemu-system-m68k-fork
           path: output/qemu-m68k-testrobot/qemu-system-m68k
           if-no-files-found: error
+
+  # Build the mvme147 U-Boot (from the m68k-testrobot U-Boot fork) and
+  # cache the SPL, keyed on the fork manifest and the build script.  The
+  # mvme147 boot workflow restores the SPL, wraps it as a ROMboot module
+  # and boots it.  Same branch-pin caveat as the QEMU fork.
+  u-boot:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      - name: Cache U-Boot SPL (mvme147)
+        id: uboot
+        uses: actions/cache@v4
+        with:
+          path: output/u-boot-m68k-testrobot/spl/u-boot-spl.bin
+          key: uboot-mvme147-${{ hashFiles('targets/mvme147/u-boot.repos', 'scripts/build-uboot.sh') }}
+
+      - name: Install build dependencies
+        if: steps.uboot.outputs.cache-hit != 'true'
+        run: sudo scripts/install-uboot-deps.sh
+
+      - name: Fetch the U-Boot fork
+        if: steps.uboot.outputs.cache-hit != 'true'
+        run: scripts/fetch-sources.sh targets/mvme147/u-boot.repos
+
+      - name: Build U-Boot (mvme147)
+        if: steps.uboot.outputs.cache-hit != 'true'
+        run: scripts/build-uboot.sh u-boot-m68k-testrobot mvme147_defconfig
+
+      - name: Upload U-Boot SPL
+        uses: actions/upload-artifact@v4
+        with:
+          name: u-boot-mvme147-spl
+          path: output/u-boot-m68k-testrobot/spl/u-boot-spl.bin
+          if-no-files-found: error

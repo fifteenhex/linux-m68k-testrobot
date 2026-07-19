@@ -1,12 +1,14 @@
 name: mvme147
 
-# Boot the Motorola MVME147 to its 147Bug firmware prompt.  MVME147 is
-# not in mainline QEMU, so it runs on the m68k-testrobot QEMU fork, which
-# the buildroot workflow builds and caches (like the mainline QEMU).
+# Boot the Motorola MVME147 into U-Boot via 147Bug's ROMboot.  MVME147 is
+# not in mainline QEMU, so it runs on the m68k-testrobot QEMU fork, and it
+# boots the m68k-testrobot U-Boot SPL; both are built and cached by the
+# buildroot workflow (like the mainline QEMU).
 #
 # Like the other targets this runs *after* the buildroot workflow and
-# restores the fork binary from its cache; it just adds the 147Bug ROM.
-# It doesn't use Buildroot or the mainline QEMU.
+# restores those binaries from its caches; it then downloads the 147Bug
+# ROM, wraps the SPL as a ROMboot module, and boots.  It doesn't use
+# Buildroot or the mainline QEMU.
 
 on:
   workflow_run:
@@ -33,8 +35,17 @@ jobs:
           key: qemu-m68k-testrobot-${{ hashFiles('targets/mvme147/sources.repos', 'scripts/build-qemu.sh') }}
           fail-on-cache-miss: true
 
-      # The restored qemu binary still needs its runtime libraries.
-      - name: Install QEMU runtime dependencies
+      - name: Restore U-Boot SPL (mvme147)
+        uses: actions/cache/restore@v4
+        with:
+          path: output/u-boot-m68k-testrobot/spl/u-boot-spl.bin
+          key: uboot-mvme147-${{ hashFiles('targets/mvme147/u-boot.repos', 'scripts/build-uboot.sh') }}
+          fail-on-cache-miss: true
+
+      # qemu runtime libraries (to run the restored binary); python3 (for
+      # the NVRAM image) comes with them.  The SPL is already a ROMboot
+      # module, so no toolchain is needed to assemble the boot artifacts.
+      - name: Install dependencies
         run: sudo scripts/install-qemu-build-deps.sh
 
       # Cache the downloaded ROM so we don't hit bitsavers every run.
@@ -49,7 +60,10 @@ jobs:
         if: steps.rom.outputs.cache-hit != 'true'
         run: scripts/fetch-rom.sh mvme147
 
-      - name: Boot the MVME147 (147Bug)
+      - name: Assemble the ROMboot artifacts
+        run: scripts/build-mvme147-boot.sh
+
+      - name: Boot the MVME147 (ROMboot -> U-Boot SPL)
         run: scripts/boot-target.sh mvme147
 
       - name: Upload boot log

@@ -32,53 +32,14 @@ scripts/build-buildroot.sh 68040         # -> output/68040/images/
 ## Targets
 
 A target is one machine + how it is booted.  Each lives under
-`targets/<name>/` (kernel config, `target.conf`).
+`targets/<name>/` (kernel config or boot artifacts, `target.conf`, and a
+README with its build/boot recipe — linked from the table below).
 
 | Machine | In QEMU | Boot method | Boot pipeline |
 | --- | --- | --- | --- |
-| Quadra 800 (`q800`) | Yes | kernel-direct | [![q800](https://github.com/fifteenhex/linux-m68k-testrobot/actions/workflows/q800.yml/badge.svg)](https://github.com/fifteenhex/linux-m68k-testrobot/actions/workflows/q800.yml) |
-| m68k virt (`virt`) | Yes | kernel-direct | [![virt](https://github.com/fifteenhex/linux-m68k-testrobot/actions/workflows/virt.yml/badge.svg)](https://github.com/fifteenhex/linux-m68k-testrobot/actions/workflows/virt.yml) |
-| MVME147 (`mvme147`) | Yes (fork) | rom (147Bug) | [![mvme147](https://github.com/fifteenhex/linux-m68k-testrobot/actions/workflows/mvme147.yml/badge.svg)](https://github.com/fifteenhex/linux-m68k-testrobot/actions/workflows/mvme147.yml) |
-
-The first target is the **Quadra 800** (`q800`), a 68040 machine booted
-with QEMU's direct kernel load (`-kernel`) plus the 68040 Buildroot
-rootfs as an lz4 initramfs:
-
-```sh
-sudo scripts/install-qemu-build-deps.sh
-sudo scripts/install-linux-deps.sh
-sudo scripts/install-buildroot-deps.sh
-scripts/fetch-sources.sh              # checkout qemu + linux + buildroot
-scripts/build-qemu.sh                 # -> output/qemu/qemu-system-m68k
-scripts/build-linux.sh q800           # -> output/linux/q800/vmlinux
-scripts/build-buildroot.sh 68040      # -> output/68040/images/rootfs.cpio.lz4
-scripts/boot-target.sh q800           # boot and check
-```
-
-The second target is the **m68k virt machine** (`virt`), QEMU's
-pure-virtual m68k platform (goldfish TTY/RTC/PIC + virtio-mmio).  It
-defaults to a 68040 CPU, so it reuses the same 68040 Buildroot rootfs;
-the flow is identical (`scripts/build-linux.sh virt`,
-`scripts/boot-target.sh virt`).
-
-The third target is the **MVME147** (`mvme147`), a 68030 VME board that
-mainline QEMU doesn't support.  It uses a QEMU fork
-([fifteenhex/qemu], branch `m68k-testrobot`), declared in its own
-per-target manifest `targets/mvme147/sources.repos` and built as
-`output/qemu-m68k-testrobot/` (selected by `QEMU_SOURCE` in
-`target.conf`).  For now it just boots the board's 147Bug firmware ROM
-(downloaded by `scripts/fetch-rom.sh` from `ROM_URL`, loaded with
-`-bios`) to its monitor prompt:
-
-```sh
-sudo scripts/install-qemu-build-deps.sh
-scripts/fetch-sources.sh targets/mvme147/sources.repos  # the QEMU fork
-scripts/build-qemu.sh qemu-m68k-testrobot               # -> output/qemu-m68k-testrobot/
-scripts/fetch-rom.sh mvme147                            # -> output/roms/147bug...
-scripts/boot-target.sh mvme147                          # boot 147Bug and check
-```
-
-[fifteenhex/qemu]: https://github.com/fifteenhex/qemu
+| [Quadra 800](targets/q800/README.md) (`q800`) | Yes | kernel-direct | [![q800](https://github.com/fifteenhex/linux-m68k-testrobot/actions/workflows/q800.yml/badge.svg)](https://github.com/fifteenhex/linux-m68k-testrobot/actions/workflows/q800.yml) |
+| [m68k virt](targets/virt/README.md) (`virt`) | Yes | kernel-direct | [![virt](https://github.com/fifteenhex/linux-m68k-testrobot/actions/workflows/virt.yml/badge.svg)](https://github.com/fifteenhex/linux-m68k-testrobot/actions/workflows/virt.yml) |
+| [MVME147](targets/mvme147/README.md) (`mvme147`) | Yes (fork) | ROMboot → U-Boot SPL | [![mvme147](https://github.com/fifteenhex/linux-m68k-testrobot/actions/workflows/mvme147.yml/badge.svg)](https://github.com/fifteenhex/linux-m68k-testrobot/actions/workflows/mvme147.yml) |
 
 The kernel-direct targets depend on the Buildroot rootfs for their CPU
 (`BUILDROOT_CPU` in `target.conf`); `boot-target.sh` fails if it is
