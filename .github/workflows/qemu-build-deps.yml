@@ -1,0 +1,30 @@
+name: qemu-build-deps
+
+# Verify that a fresh Ubuntu runner can install everything needed to
+# build QEMU.  This is the foundation for the build/test jobs that will
+# follow (building qemu-system-m68k, booting the machine models, etc).
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  install-deps:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      - name: Install QEMU build dependencies
+        run: sudo scripts/install-qemu-build-deps.sh
+
+      - name: Show tool versions
+        run: |
+          gcc --version | head -1
+          ninja --version
+          meson --version
+          pkgconf --version
+          python3 --version
+          pkgconf --modversion glib-2.0
+          pkgconf --modversion pixman-1
