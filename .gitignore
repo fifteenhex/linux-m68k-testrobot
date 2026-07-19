@@ -2,3 +2,5 @@
 /src/
 # Build output
 /output/
+# Shared Buildroot download directory
+/br-dl/
