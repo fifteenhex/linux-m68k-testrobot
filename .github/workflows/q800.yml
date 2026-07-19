@@ -1,0 +1,42 @@
+name: q800
+
+# Build qemu-system-m68k and a Quadra 800 kernel from upstream source,
+# then boot the machine with QEMU's direct kernel load (-kernel) and
+# check it boots.
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  boot:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo scripts/install-qemu-build-deps.sh
+          sudo scripts/install-linux-deps.sh
+
+      - name: Fetch sources
+        run: scripts/fetch-sources.sh
+
+      - name: Build qemu-system-m68k
+        run: scripts/build-qemu.sh
+
+      - name: Build Linux for the Quadra 800
+        run: scripts/build-linux.sh q800
+
+      - name: Boot the Quadra 800 (kernel-direct)
+        run: scripts/boot-target.sh q800
+
+      - name: Upload boot log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: q800-boot-log
+          path: output/q800-boot.log
+          if-no-files-found: warn

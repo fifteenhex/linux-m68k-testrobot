@@ -29,9 +29,31 @@ scripts/build-buildroot.sh 68040         # -> output/68040/images/
 - `configs/buildroot/m68k_<cpu>_defconfig` — the per-CPU defconfigs.
 - `.github/workflows/buildroot.yml` — builds both CPUs on `ubuntu-latest`.
 
+## Targets
+
+A target is one machine + how it is booted.  Each lives under
+`targets/<name>/` (kernel config, `target.conf`).
+
+The first target is the **Quadra 800** (`q800`), booted with QEMU's
+direct kernel load (`-kernel`):
+
+```sh
+sudo scripts/install-qemu-build-deps.sh
+sudo scripts/install-linux-deps.sh
+scripts/fetch-sources.sh              # checkout qemu + linux (+ buildroot)
+scripts/build-qemu.sh                 # -> output/qemu/qemu-system-m68k
+scripts/build-linux.sh q800           # -> output/linux/q800/vmlinux
+scripts/boot-target.sh q800           # boot and check
+```
+
+Booting through the full boot process (ROM / bootloader) instead of
+direct kernel load is a later milestone; `boot-target.sh` and
+`target.conf` are structured so it can be added per target.
+
 ## Layout
 
 - `sources.repos` — vcs2l manifest of external source trees.
-- `scripts/` — dependency install, source fetch, and build scripts.
+- `scripts/` — dependency install, source fetch, build, and boot scripts.
 - `configs/` — Buildroot defconfigs.
+- `targets/` — per-target machine definitions.
 - `.github/workflows/` — CI jobs.

@@ -1,8 +1,17 @@
 # vcs2l manifest of the external source trees the robot builds.
-# Fetch with: scripts/fetch-sources.sh  (runs `vcs import src`).
-# The keys are the checkout paths under src/.
+# Fetch with: scripts/fetch-sources.sh  (runs `vcs import src --shallow`).
+# The keys are the checkout paths under src/.  Versions are tags/branches
+# (not raw hashes) so shallow clones work.
 repositories:
   buildroot:
     type: git
     url: https://gitlab.com/buildroot.org/buildroot.git
     version: '2026.02.3'
+  qemu:
+    type: git
+    url: https://gitlab.com/qemu-project/qemu.git
+    version: 'v11.0.2'
+  linux:
+    type: git
+    url: https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git
+    version: 'v7.1'
