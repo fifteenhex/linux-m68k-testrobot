@@ -9,11 +9,15 @@ in `u-boot.repos`).
 The board has no direct kernel/loader path in QEMU, so U-Boot is started
 through **147Bug's ROMboot**.  The U-Boot fork builds its SPL as a
 self-contained 147Bug "BOOT" module (the ROMboot header and self-relocator
-are in the SPL itself), so 147Bug finds it in ROM bank 2, runs it, and the
-SPL then tries to load full U-Boot over SCSI.  `scripts/build-mvme147-boot.sh`
-just stages the SPL as the bank-2 image alongside a ROMboot-enabled NVRAM
-and a blank SCSI disk.  For now we only check it gets that far
-(`Trying to boot from SATA`):
+are in the SPL itself), so 147Bug finds it in ROM bank 2 and runs it.  The
+SPL then loads `u-boot.img` from a FAT16 partition on the SCSI disk and
+starts full U-Boot, which drops to its `mvme147 =>` prompt.
+
+`scripts/build-mvme147-boot.sh` stages the SPL as the bank-2 image, builds
+the ROMboot-enabled NVRAM, and builds the SCSI disk — a DOS MBR with a
+bootable FAT16 partition holding `u-boot.img` (via `mkfs.fat` + `mcopy` +
+`sfdisk`, so no loop device or root is needed).  We check it reaches the
+`mvme147 =>` prompt:
 
 ```sh
 sudo scripts/install-qemu-build-deps.sh

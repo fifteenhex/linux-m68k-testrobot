@@ -35,18 +35,23 @@ jobs:
           key: qemu-m68k-testrobot-${{ hashFiles('targets/mvme147/sources.repos', 'scripts/build-qemu.sh') }}
           fail-on-cache-miss: true
 
-      - name: Restore U-Boot SPL (mvme147)
+      - name: Restore U-Boot (mvme147)
         uses: actions/cache/restore@v4
         with:
-          path: output/u-boot-m68k-testrobot/spl/u-boot-spl.bin
-          key: uboot-mvme147-${{ hashFiles('targets/mvme147/u-boot.repos', 'scripts/build-uboot.sh') }}
+          path: |
+            output/u-boot-m68k-testrobot/spl/u-boot-spl.bin
+            output/u-boot-m68k-testrobot/u-boot.img
+          key: uboot-mvme147-v2-${{ hashFiles('targets/mvme147/u-boot.repos', 'scripts/build-uboot.sh') }}
           fail-on-cache-miss: true
 
-      # qemu runtime libraries (to run the restored binary); python3 (for
-      # the NVRAM image) comes with them.  The SPL is already a ROMboot
-      # module, so no toolchain is needed to assemble the boot artifacts.
+      # qemu runtime libraries (to run the restored binary) plus the disk
+      # tools used to build the FAT16 boot disk; python3 (for the NVRAM
+      # image) comes with the qemu deps.  The SPL is already a ROMboot
+      # module, so no cross toolchain is needed here.
       - name: Install dependencies
-        run: sudo scripts/install-qemu-build-deps.sh
+        run: |
+          sudo scripts/install-qemu-build-deps.sh
+          sudo apt-get install -y --no-install-recommends dosfstools mtools
 
       # Cache the downloaded ROM so we don't hit bitsavers every run.
       - name: Cache 147Bug ROM
@@ -63,7 +68,7 @@ jobs:
       - name: Assemble the ROMboot artifacts
         run: scripts/build-mvme147-boot.sh
 
-      - name: Boot the MVME147 (ROMboot -> U-Boot SPL)
+      - name: Boot the MVME147 (ROMboot -> U-Boot)
         run: scripts/boot-target.sh mvme147
 
       - name: Upload boot log
