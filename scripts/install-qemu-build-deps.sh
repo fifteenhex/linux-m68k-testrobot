@@ -42,4 +42,8 @@ $SUDO apt-get install --no-install-recommends -y \
 # system-wide keeps the build hermetic and lets configure reuse it.
 $SUDO pip3 install --break-system-packages meson || $SUDO pip3 install meson
 
+# vcs2l (maintained fork of vcstool) drives scripts/fetch-sources.sh,
+# which fetches the QEMU source before building.
+$SUDO pip3 install --break-system-packages vcs2l || $SUDO pip3 install vcs2l
+
 echo "QEMU build dependencies installed."
