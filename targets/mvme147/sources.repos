@@ -1,0 +1,8 @@
+# Extra source tree for the mvme147 target (fetched in addition to the
+# shared sources.repos): the QEMU fork that models the MVME147, which is
+# not supported by mainline QEMU.  Built as output/qemu-m68k-testrobot/.
+repositories:
+  qemu-m68k-testrobot:
+    type: git
+    url: https://github.com/fifteenhex/qemu.git
+    version: m68k-testrobot
