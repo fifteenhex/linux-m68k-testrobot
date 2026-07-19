@@ -1,30 +1,37 @@
 name: q800
 
-# Build qemu-system-m68k, a Quadra 800 kernel and a Buildroot rootfs
-# (68040), then boot the machine with QEMU's direct kernel load (-kernel)
-# and the rootfs as an initramfs, and check it boots.
+# Boot the Quadra 800: build qemu-system-m68k and a Quadra 800 kernel,
+# then boot with QEMU's direct kernel load (-kernel) and the 68040
+# Buildroot rootfs as an initramfs, and check it boots.
+#
+# This runs *after* the buildroot workflow so the rootfs is built once
+# and shared (via its cache) by every target, instead of each target
+# rebuilding Buildroot.  The rootfs is restored from that cache here.
 
 on:
-  push:
-  pull_request:
+  workflow_run:
+    workflows: [buildroot]
+    types: [completed]
   workflow_dispatch:
 
 jobs:
   boot:
     runs-on: ubuntu-latest
+    # On a workflow_run trigger, only proceed if the buildroot run passed
+    # (so its rootfs cache exists); a manual dispatch always runs.
+    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
     steps:
       - name: Check out the repository
         uses: actions/checkout@v4
 
-      # The q800 boots the 68040 Buildroot rootfs.  Reuse the image
-      # cached by the buildroot workflow (same key); build it here only
-      # on a cache miss.
-      - name: Cache Buildroot rootfs (68040)
-        id: rootfs
-        uses: actions/cache@v4
+      # Reuse the rootfs the buildroot workflow built and cached (same
+      # key).  Fail loudly if it is missing rather than rebuilding it.
+      - name: Restore Buildroot rootfs (68040)
+        uses: actions/cache/restore@v4
         with:
           path: output/68040/images
           key: br-rootfs-68040-${{ hashFiles('sources.repos', 'configs/buildroot/m68k_68040_defconfig') }}
+          fail-on-cache-miss: true
 
       - name: Install dependencies
         run: |
@@ -33,12 +40,6 @@ jobs:
 
       - name: Fetch sources
         run: scripts/fetch-sources.sh
-
-      - name: Build Buildroot rootfs (68040)
-        if: steps.rootfs.outputs.cache-hit != 'true'
-        run: |
-          sudo scripts/install-buildroot-deps.sh
-          scripts/build-buildroot.sh 68040
 
       - name: Build qemu-system-m68k
         run: scripts/build-qemu.sh
