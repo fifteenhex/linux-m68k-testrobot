@@ -63,3 +63,19 @@ jobs:
           name: q800-boot-log
           path: output/q800-boot.log
           if-no-files-found: warn
+
+      # The Quadra 800 has a framebuffer, so record its boot to a GIF and
+      # upload it as an artifact.
+      - name: Install recording tools
+        run: sudo apt-get install -y --no-install-recommends ffmpeg
+
+      - name: Record the boot GIF
+        run: scripts/record-target.sh q800
+
+      - name: Upload boot GIF
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: q800-boot-gif
+          path: output/q800-boot.gif
+          if-no-files-found: warn
