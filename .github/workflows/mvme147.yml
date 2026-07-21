@@ -44,6 +44,13 @@ jobs:
           key: uboot-mvme147-v2-${{ hashFiles('targets/mvme147/u-boot.repos', 'scripts/build-uboot.sh') }}
           fail-on-cache-miss: true
 
+      - name: Restore mvme147 kernel
+        uses: actions/cache/restore@v4
+        with:
+          path: output/linux/mvme147/vmlinux
+          key: linux-mvme147-${{ hashFiles('targets/mvme147/linux.repos', 'targets/mvme147/target.conf', 'scripts/build-linux.sh') }}
+          fail-on-cache-miss: true
+
       # qemu runtime libraries (to run the restored binary) plus the disk
       # tools used to build the FAT16 boot disk; python3 (for the NVRAM
       # image) comes with the qemu deps.  The SPL is already a ROMboot
@@ -68,7 +75,7 @@ jobs:
       - name: Assemble the ROMboot artifacts
         run: scripts/build-mvme147-boot.sh
 
-      - name: Boot the MVME147 (ROMboot -> U-Boot)
+      - name: Boot the MVME147 (ROMboot -> U-Boot -> Linux)
         run: scripts/boot-target.sh mvme147
 
       - name: Upload boot log
