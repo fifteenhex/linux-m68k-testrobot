@@ -44,21 +44,22 @@ jobs:
           key: uboot-mvme147-v2-${{ hashFiles('targets/mvme147/u-boot.repos', 'scripts/build-uboot.sh') }}
           fail-on-cache-miss: true
 
-      - name: Restore mvme147 kernel
-        uses: actions/cache/restore@v4
-        with:
-          path: output/linux/mvme147/vmlinux
-          key: linux-mvme147-${{ hashFiles('targets/mvme147/linux.repos', 'targets/mvme147/target.conf', 'scripts/build-linux.sh') }}
-          fail-on-cache-miss: true
-
-      # qemu runtime libraries (to run the restored binary) plus the disk
-      # tools used to build the FAT16 boot disk; python3 (for the NVRAM
-      # image) comes with the qemu deps.  The SPL is already a ROMboot
-      # module, so no cross toolchain is needed here.
+      # qemu runtime libraries (to run the restored binary), the kernel
+      # build toolchain, and the disk tools used to build the FAT16 boot
+      # disk; python3 (for the NVRAM image) comes with the qemu deps.  The
+      # SPL is already a ROMboot module, so no cross toolchain is needed to
+      # assemble it.
       - name: Install dependencies
         run: |
           sudo scripts/install-qemu-build-deps.sh
+          sudo scripts/install-linux-deps.sh
           sudo apt-get install -y --no-install-recommends dosfstools mtools
+
+      - name: Fetch the Linux fork
+        run: scripts/fetch-sources.sh targets/mvme147/linux.repos
+
+      - name: Build Linux (mvme147)
+        run: scripts/build-linux.sh mvme147
 
       # Cache the downloaded ROM so we don't hit bitsavers every run.
       - name: Cache 147Bug ROM

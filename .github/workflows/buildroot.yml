@@ -207,39 +207,3 @@ jobs:
             output/u-boot-m68k-testrobot/spl/u-boot-spl.bin
             output/u-boot-m68k-testrobot/u-boot.img
           if-no-files-found: error
-
-  # Build the mvme147 Linux kernel from the m68k-testrobot Linux fork
-  # (mainline only partially supports the board) using its in-tree
-  # mvme147_defconfig, and cache the vmlinux.  Booting it is not wired up
-  # yet.  Same branch-pin caveat as the other forks.
-  linux-mvme147:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check out the repository
-        uses: actions/checkout@v4
-
-      - name: Cache mvme147 kernel
-        id: linux
-        uses: actions/cache@v4
-        with:
-          path: output/linux/mvme147/vmlinux
-          key: linux-mvme147-${{ hashFiles('targets/mvme147/linux.repos', 'targets/mvme147/target.conf', 'scripts/build-linux.sh') }}
-
-      - name: Install build dependencies
-        if: steps.linux.outputs.cache-hit != 'true'
-        run: sudo scripts/install-linux-deps.sh
-
-      - name: Fetch the Linux fork
-        if: steps.linux.outputs.cache-hit != 'true'
-        run: scripts/fetch-sources.sh targets/mvme147/linux.repos
-
-      - name: Build Linux (mvme147)
-        if: steps.linux.outputs.cache-hit != 'true'
-        run: scripts/build-linux.sh mvme147
-
-      - name: Upload vmlinux
-        uses: actions/upload-artifact@v4
-        with:
-          name: linux-mvme147
-          path: output/linux/mvme147/vmlinux
-          if-no-files-found: error
